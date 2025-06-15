@@ -1,0 +1,26 @@
+import 'dotenv/config';
+import * as joi from 'joi';
+
+interface EnvVars {
+  PORT: number;
+}
+
+const envsSchema = joi
+  .object<EnvVars>({
+    PORT: joi.number().required(),
+  })
+  .unknown(true);
+
+const validatedEnvs = envsSchema.validate(process.env, {
+  abortEarly: false,
+});
+
+if (validatedEnvs.error) {
+  throw new Error(`Config validation error: ${validatedEnvs.error.message}`);
+}
+
+const envVars = validatedEnvs.value;
+
+export const envs = {
+  port: envVars.PORT,
+};
