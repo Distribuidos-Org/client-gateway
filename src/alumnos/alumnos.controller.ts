@@ -1,6 +1,21 @@
-import { Controller, Delete, Get, Inject, Patch, Post } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { catchError } from 'rxjs';
+import { PaginationDto } from 'src/common/dto/pagionation.dto';
 import { ALUMNOS_SERVICE } from 'src/config/services';
+import { RpcError } from './dto/rpc-error.dto';
+import { CreateAlumnoDto } from './dto/create-alumno.dto';
+import { UpdateAlumnoDto } from './dto/update-alumno.dto';
 
 @Controller('alumnos')
 export class AlumnosController {
@@ -9,28 +24,47 @@ export class AlumnosController {
   ) {}
 
   @Post()
-  createAlumno() {
-    return { message: 'Alumno created successfully' };
+  createAlumno(@Body() createAlumnoDto: CreateAlumnoDto) {
+    return this.alumnosClient.send({ cmd: 'create_alumno' }, createAlumnoDto);
   }
 
   @Get()
-  getAlumnos() {
-    return this.alumnosClient.send({ cmd: 'find_all_alumnos' }, {});
+  getAlumnos(@Query() paginationDto: PaginationDto) {
+    return this.alumnosClient.send({ cmd: 'find_all_alumnos' }, paginationDto);
   }
 
   @Get(':id')
-  getAlumnoById() {
-    return { id: 1, name: 'John Doe' };
+  getAlumnoById(@Param('id') id: string) {
+    return this.alumnosClient.send({ cmd: 'find_one_alumno' }, { id }).pipe(
+      catchError((error: RpcError) => {
+        throw new RpcException(error);
+      }),
+    );
   }
 
   @Patch(':id')
-  updateAlumno() {
-    return { message: 'Alumno updated successfully' };
+  updateAlumno(
+    @Param('id') id: string,
+    @Body() updateAlumnoDto: UpdateAlumnoDto,
+  ) {
+    return this.alumnosClient
+      .send({ cmd: 'update_alumno' }, { id: id, ...updateAlumnoDto })
+      .pipe(
+        catchError((error: RpcError) => {
+          console.log('Error updating alumno:', error);
+          throw new RpcException(error);
+        }),
+      );
   }
 
   @Delete(':id')
-  deleteAlumno() {
-    return { message: 'Alumno deleted successfully' };
+  deleteAlumno(@Param('id') id: number) {
+    return this.alumnosClient.send({ cmd: 'remove_alumno' }, { id }).pipe(
+      catchError((error: RpcError) => {
+        console.log('Error deleting alumno:', error);
+        throw new RpcException(error);
+      }),
+    );
   }
 
   @Post('seed')

@@ -1,18 +1,28 @@
 import { NestFactory } from '@nestjs/core';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { RpcExceptionHandler } from './common/exceptions/rpc-exception.filter';
 import { envs } from './config/envs';
-import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  app.useGlobalFilters(new RpcExceptionHandler());
+
   await app.listen(envs.port);
 
   Logger.log(
-    `🎓 Alumnos microservice is running on: ${await app.getUrl()}`,
-    'CalvoMicroservice',
+    `🚀 API Gateway is running on: ${await app.getUrl()}`,
+    'ApiGateway',
   );
 }
 bootstrap();
