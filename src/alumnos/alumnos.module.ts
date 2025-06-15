@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AlumnosController } from './alumnos.controller';
-import { ALUMNOS_SERVICE } from 'src/config/services';
+import { NATS_SERVICE } from 'src/config/services';
 import { envs } from 'src/config/envs';
 
 @Module({
@@ -9,11 +9,10 @@ import { envs } from 'src/config/envs';
   imports: [
     ClientsModule.register([
       {
-        name: ALUMNOS_SERVICE,
-        transport: Transport.TCP,
+        name: NATS_SERVICE,
+        transport: Transport.NATS,
         options: {
-          host: envs.alumnosServiceHost,
-          port: envs.alumnosServicePort,
+          servers: envs.natsServers,
         },
       },
     ]),
