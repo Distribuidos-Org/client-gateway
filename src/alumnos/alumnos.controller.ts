@@ -1,8 +1,12 @@
-import { Controller, Delete, Get, Patch, Post } from '@nestjs/common';
+import { Controller, Delete, Get, Inject, Patch, Post } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { ALUMNOS_SERVICE } from 'src/config/services';
 
 @Controller('alumnos')
 export class AlumnosController {
-  constructor() {}
+  constructor(
+    @Inject(ALUMNOS_SERVICE) private readonly alumnosClient: ClientProxy,
+  ) {}
 
   @Post()
   createAlumno() {
@@ -11,10 +15,7 @@ export class AlumnosController {
 
   @Get()
   getAlumnos() {
-    return [
-      { id: 1, name: 'John Doe' },
-      { id: 2, name: 'Jane Smith' },
-    ];
+    return this.alumnosClient.send({ cmd: 'find_all_alumnos' }, {});
   }
 
   @Get(':id')
@@ -30,5 +31,10 @@ export class AlumnosController {
   @Delete(':id')
   deleteAlumno() {
     return { message: 'Alumno deleted successfully' };
+  }
+
+  @Post('seed')
+  seedAlumnos() {
+    return this.alumnosClient.send({ cmd: 'seed_alumnos' }, {});
   }
 }
