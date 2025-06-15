@@ -1,0 +1,1 @@
+export const ALUMNOS_SERVICE = 'ALUMNOS_SERVICE';
