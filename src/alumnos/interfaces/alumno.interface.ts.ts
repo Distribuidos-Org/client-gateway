@@ -1,4 +1,4 @@
-export interface AlumnoDto {
+export interface Alumno {
   alumnoId?: number;
   nombre: string;
   apellidoPaterno: string;
