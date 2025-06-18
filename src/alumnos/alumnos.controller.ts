@@ -14,16 +14,20 @@ import { catchError, Observable } from 'rxjs';
 import { PaginationDto } from 'src/common/dto/pagionation.dto';
 import { NATS_SERVICE } from 'src/config/services';
 import { RpcError } from '../common/dto/rpc-error.dto';
-import { CreateAlumnoDto } from './dto/requests/create-alumno.dto';
-import { UpdateAlumnoDto } from './dto/requests/update-alumno.dto';
-import { AlumnoResponse } from './dto/responses/alumno-response.dto';
-import { AlumnosListResponse } from './dto/responses/alumnos-list-response.dto';
+import {
+  AlumnoResponse,
+  AlumnosListResponse,
+  CreateAlumnoDto,
+  UpdateAlumnoDto,
+} from './dto';
+import { ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 
 @Controller('alumnos')
 export class AlumnosController {
   constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy) {}
 
   @Post()
+  @ApiOperation({ summary: 'Crear un nuevo alumno' })
   createAlumno(
     @Body() createAlumnoDto: CreateAlumnoDto,
   ): Observable<AlumnoResponse> {
@@ -31,6 +35,19 @@ export class AlumnosController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Obtener lista de alumnos con paginación' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página (por defecto: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Límite de elementos por página (por defecto: 10)',
+  })
   getAlumnos(
     @Query() paginationDto: PaginationDto,
   ): Observable<AlumnosListResponse[]> {
@@ -38,6 +55,8 @@ export class AlumnosController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obtener un alumno por ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'ID del alumno' })
   getAlumnoById(@Param('id') id: string): Observable<AlumnoResponse> {
     return this.client
       .send<AlumnoResponse>({ cmd: 'find_one_alumno' }, { id })
@@ -49,6 +68,12 @@ export class AlumnosController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar un alumno existente' })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    description: 'ID del alumno a actualizar',
+  })
   updateAlumno(
     @Param('id') id: string,
     @Body() updateAlumnoDto: UpdateAlumnoDto,
@@ -67,6 +92,12 @@ export class AlumnosController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Eliminar un alumno' })
+  @ApiParam({
+    name: 'id',
+    type: 'number',
+    description: 'ID del alumno a eliminar',
+  })
   deleteAlumno(@Param('id') id: number) {
     return this.client
       .send<{ message: string }>({ cmd: 'remove_alumno' }, { id })
@@ -79,6 +110,7 @@ export class AlumnosController {
   }
 
   @Post('seed')
+  @ApiOperation({ summary: 'Poblar la base de datos con datos de prueba' })
   seedAlumnos() {
     return this.client.send<{
       message: string;
